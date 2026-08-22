@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.hardware-product-studio/engineering-manifest.schema.json",
+  "title": "Hardware Product Engineering Viewer Manifest",
+  "type": "object",
+  "required": ["schemaVersion", "project", "model", "parts"],
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "project": {
+      "type": "object",
+      "required": ["name", "code", "revision"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "code": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "minLength": 1 },
+        "viewerTitle": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "model": {
+      "type": "object",
+      "required": ["units", "upAxis", "dimensionsMm", "partCount"],
+      "properties": {
+        "file": { "type": "string" },
+        "units": { "const": "mm" },
+        "upAxis": { "enum": ["X", "Y", "Z"] },
+        "dimensionsMm": { "$ref": "#/$defs/vector3" },
+        "partCount": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": true
+    },
+    "parts": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/part" }
+    }
+  },
+  "$defs": {
+    "vector3": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number", "exclusiveMinimum": 0 },
+        { "type": "number", "exclusiveMinimum": 0 },
+        { "type": "number", "exclusiveMinimum": 0 }
+      ],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "part": {
+      "type": "object",
+      "required": ["id", "label", "group", "units", "dimensionsMm", "engineering"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "label": { "type": "string", "minLength": 1 },
+        "group": { "type": "string", "minLength": 1 },
+        "units": { "const": "mm" },
+        "dimensionsMm": { "$ref": "#/$defs/vector3" },
+        "volumeMm3": { "type": "number", "exclusiveMinimum": 0 },
+        "role": { "type": "string" },
+        "engineering": {
+          "type": "object",
+          "required": ["part_type", "geometry_status", "manufacturing_process", "material"],
+          "properties": {
+            "part_type": { "enum": ["printed", "fabricated", "purchased", "reference"] },
+            "geometry_status": { "enum": ["design_exact", "manufacturer_verified", "vendor_cad_imported", "candidate_envelope", "reference_only"] },
+            "manufacturing_process": { "type": "string" },
+            "material": { "type": "string" },
+            "nominal_clearance_mm": { "type": "number", "minimum": 0 },
+            "source_label": { "type": "string" },
+            "source_url": { "type": "string" },
+            "notes": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

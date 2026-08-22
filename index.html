@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071018" />
+    <meta name="description" content="Local-first, gesture-controlled 3D engineering viewer for robots and hardware products." />
+    <link rel="icon" type="image/png" href="/spatial-hardware-inspector-logo.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <title>Spatial Hardware Inspector</title>
+  </head>
+  <body>
+    <main id="app" class="app-shell">
+      <canvas id="scene" aria-label="Interactive 3D hardware product assembly"></canvas>
+
+      <header class="topbar glass-panel">
+        <div class="brand-block">
+          <img class="brand-logo" src="/spatial-hardware-inspector-logo.png" alt="" aria-hidden="true" />
+          <div>
+            <p class="eyebrow" id="project-code">HARDWARE PRODUCT // UNIVERSAL</p>
+            <h1 id="viewer-title">Spatial Engineering Inspector</h1>
+          </div>
+        </div>
+        <div class="system-state">
+          <span id="fps-readout">-- FPS</span>
+          <span id="gesture-latency" hidden>-- ms AI</span>
+          <span id="overall-size" hidden>-- mm</span>
+          <span class="separator" aria-hidden="true"></span>
+          <span id="model-state"><i class="status-dot"></i> Choose a product</span>
+          <button id="product-source-toggle" class="source-button" type="button" aria-expanded="false" aria-controls="product-source-panel">
+            <span class="source-icon" aria-hidden="true"></span>
+            Load product
+          </button>
+          <button id="camera-toggle" class="camera-button" type="button">
+            <span class="camera-icon" aria-hidden="true"></span>
+            Enable gesture control
+          </button>
+        </div>
+      </header>
+
+      <section id="product-source-panel" class="product-source-panel glass-panel" aria-labelledby="product-source-title" hidden>
+        <div class="source-panel-heading">
+          <div>
+            <p class="eyebrow">UNIVERSAL MODEL INPUT</p>
+            <h2 id="product-source-title">Load hardware product</h2>
+          </div>
+          <button id="product-source-close" class="panel-icon-button" type="button" aria-label="Close product loader">×</button>
+        </div>
+
+        <div id="product-source-status" class="product-source-status" data-status="ready">
+          <span>ACTIVE PRODUCT</span>
+          <strong id="active-product-name">No product loaded</strong>
+          <small id="product-compatibility">Select a local GLB and optional engineering manifest, or enter hosted addresses.</small>
+        </div>
+
+        <div class="source-section">
+          <div class="source-section-heading">
+            <strong>Local project</strong>
+            <small>Choose a self-contained GLB and optional engineering JSON.</small>
+          </div>
+          <label class="source-file-field" for="product-model-file">
+            <span>3D model</span>
+            <input id="product-model-file" type="file" accept=".glb,model/gltf-binary" />
+          </label>
+          <label class="source-file-field" for="product-manifest-file">
+            <span>Manifest</span>
+            <input id="product-manifest-file" type="file" accept=".json,application/json" />
+          </label>
+          <div class="source-options-grid">
+            <label>Source units
+              <select id="product-source-units">
+                <option value="mm">Millimetres (mm)</option>
+                <option value="cm">Centimetres (cm)</option>
+                <option value="m">Metres (m)</option>
+                <option value="in">Inches (in)</option>
+              </select>
+            </label>
+            <label>Up axis
+              <select id="product-up-axis">
+                <option value="Y">Y-up (standard GLB)</option>
+                <option value="Z">Z-up (CAD export)</option>
+                <option value="X">X-up</option>
+              </select>
+            </label>
+          </div>
+          <button id="product-load-local" class="source-primary-button" type="button">LOAD LOCAL PROJECT</button>
+        </div>
+
+        <div class="source-section">
+          <div class="source-section-heading">
+            <strong>Model address</strong>
+            <small>Load a hosted GLB/GLTF and optional CORS-enabled manifest.</small>
+          </div>
+          <label class="source-url-field" for="product-model-url">Model URL
+            <input id="product-model-url" type="url" inputmode="url" placeholder="https://…/product.glb" />
+          </label>
+          <label class="source-url-field" for="product-manifest-url">Manifest URL
+            <input id="product-manifest-url" type="url" inputmode="url" placeholder="https://…/product_manifest.json (optional)" />
+          </label>
+          <div class="source-actions">
+            <button id="product-clear" class="source-secondary-button" type="button">CLEAR VIEWER</button>
+            <button id="product-load-url" class="source-primary-button" type="button">LOAD ADDRESSES</button>
+          </div>
+        </div>
+
+        <div class="source-section source-recent-section">
+          <label for="product-recent">Recent URL projects</label>
+          <div class="source-actions">
+            <select id="product-recent"><option value="">No recent URL projects</option></select>
+            <button id="product-load-recent" class="source-secondary-button" type="button" disabled>OPEN</button>
+          </div>
+        </div>
+
+        <p class="source-footnote">Drop a GLB and optional JSON anywhere on the scene. A manifest supplies exact units, names, dimensions, materials, process, and release status; without one, dimensions are measured from the mesh using the selected source units.</p>
+      </section>
+
+      <nav class="action-rail glass-panel" aria-label="Assembly controls">
+        <p class="rail-label">Assembly</p>
+        <button type="button" class="rail-action" id="assemble-button" data-key="A">
+          <span class="action-glyph assemble-glyph" aria-hidden="true"></span>
+          <span>Assemble</span>
+        </button>
+        <button type="button" class="rail-action is-primary" id="explode-button" data-key="E">
+          <span class="action-glyph explode-glyph" aria-hidden="true"></span>
+          <span>Explode</span>
+        </button>
+        <div class="rail-rule" aria-hidden="true"></div>
+        <button type="button" class="rail-action" id="focus-button" data-key="F" disabled>
+          <span class="action-glyph focus-glyph" aria-hidden="true"></span>
+          <span>Focus part</span>
+        </button>
+        <button type="button" class="rail-action" id="dimensions-button" data-key="D" aria-pressed="false">
+          <span class="action-glyph dimensions-glyph" aria-hidden="true"></span>
+          <span>Dimensions</span>
+        </button>
+        <button type="button" class="rail-action" id="home-button" data-key="H">
+          <span class="action-glyph home-glyph" aria-hidden="true"></span>
+          <span>Full view</span>
+        </button>
+      </nav>
+
+      <section class="gesture-panel glass-panel" aria-labelledby="gesture-panel-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">OPTICAL INPUT</p>
+            <h2 id="gesture-panel-title">Hand tracking</h2>
+          </div>
+          <div class="camera-heading-actions">
+            <button id="camera-settings-toggle" class="panel-icon-button" type="button" aria-expanded="false" aria-controls="camera-settings-panel">CONFIG</button>
+            <span id="camera-state" class="state-chip">OFFLINE</span>
+          </div>
+        </div>
+        <div class="camera-stage">
+          <video id="webcam" autoplay playsinline muted></video>
+          <canvas id="hand-overlay" aria-hidden="true"></canvas>
+          <div class="reticle" id="gesture-reticle" aria-hidden="true"><span></span></div>
+          <div id="camera-placeholder" class="camera-placeholder">
+            <span class="scan-hand" aria-hidden="true">✋</span>
+            <p>Enable the camera to activate spatial gestures</p>
+          </div>
+        </div>
+        <div class="gesture-readout">
+          <div>
+            <span class="readout-label">Detected</span>
+            <strong id="gesture-name">No hand</strong>
+          </div>
+          <div class="confidence-block">
+            <span id="gesture-confidence">0%</span>
+            <div class="confidence-track"><span id="confidence-fill"></span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="camera-settings-panel" class="camera-settings-panel glass-panel" aria-labelledby="camera-settings-title" hidden>
+        <div class="camera-settings-heading">
+          <div>
+            <p class="eyebrow">OPTICAL CONFIGURATION</p>
+            <h2 id="camera-settings-title">Camera matrix</h2>
+          </div>
+          <button id="camera-settings-close" class="panel-icon-button" type="button" aria-label="Close camera settings">×</button>
+        </div>
+
+        <div class="recommendation-banner">
+          <span class="recommendation-star" aria-hidden="true">★</span>
+          <div>
+            <strong>Fast tracking is recommended</strong>
+            <small>Compact input + highest useful FPS gives the lowest gesture delay.</small>
+          </div>
+        </div>
+
+        <div class="camera-field camera-field-wide">
+          <label for="camera-device">Camera source <span class="best-mark">BEST AUTO-RANKED</span></label>
+          <div class="camera-field-action">
+            <select id="camera-device" aria-describedby="camera-capability-summary">
+              <option value="">System default</option>
+            </select>
+            <button id="camera-scan" class="camera-mini-button" type="button">SCAN</button>
+          </div>
+          <small id="camera-capability-summary">Scan after granting permission to reveal every connected camera.</small>
+        </div>
+
+        <div class="camera-settings-grid">
+          <div class="camera-field camera-field-wide">
+            <label for="camera-preset">Use profile</label>
+            <select id="camera-preset">
+              <option value="speed">Fast tracking ★ BEST</option>
+              <option value="balanced">Balanced tracking</option>
+              <option value="detail">Maximum camera detail</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="camera-field">
+            <label for="camera-resolution">Resolution / megapixels <span class="best-mark">BEST SPEED</span></label>
+            <select id="camera-resolution"></select>
+          </div>
+          <div class="camera-field">
+            <label for="camera-fps">Frame rate <span class="best-mark">BEST LATENCY</span></label>
+            <select id="camera-fps"></select>
+          </div>
+          <div class="camera-field camera-field-wide">
+            <label for="camera-color-profile">Preview color grading <span class="best-mark">BEST VISIBILITY</span></label>
+            <select id="camera-color-profile">
+              <option value="tracking">Tracking clarity ★ BEST</option>
+              <option value="natural">Natural color</option>
+              <option value="low-light">Low-light lift</option>
+              <option value="contrast">High contrast</option>
+              <option value="mono">Monochrome</option>
+            </select>
+            <small>Preview only—AI receives raw frames, so color grading adds no inference delay.</small>
+          </div>
+        </div>
+
+        <div class="camera-active-mode" aria-live="polite">
+          <span>ACTIVE STREAM</span>
+          <strong id="camera-active-mode">Camera offline</strong>
+          <small id="camera-mode-note">Requested settings will be verified after the camera starts.</small>
+        </div>
+
+        <div class="camera-hardware-section">
+          <div class="camera-subheading">
+            <span>Device controls</span>
+            <small id="camera-hardware-count">Available after camera start</small>
+          </div>
+          <div id="camera-hardware-controls" class="camera-hardware-controls">
+            <p class="camera-empty-state">Focus, exposure, white balance, color and zoom controls will appear here when supported.</p>
+          </div>
+        </div>
+
+        <div class="camera-settings-actions">
+          <button id="camera-reset-recommended" class="camera-secondary-button" type="button">USE BEST</button>
+          <button id="camera-apply" class="camera-primary-button" type="button">APPLY TO CAMERA</button>
+        </div>
+      </section>
+
+      <section class="gesture-guide glass-panel" aria-labelledby="gesture-guide-title">
+        <div class="guide-heading">
+          <p class="eyebrow">GESTURE MAP</p>
+          <h2 id="gesture-guide-title">Spatial commands</h2>
+        </div>
+        <ul>
+          <li><span>✋</span><strong>Hold palm</strong><small>Explode</small></li>
+          <li><span>✊</span><strong>Hold fist</strong><small>Assemble</small></li>
+          <li><span>☝</span><strong>Point + move</strong><small>Orbit</small></li>
+          <li><span>✌</span><strong>Victory + move</strong><small>Pan</small></li>
+          <li><span>🤟</span><strong>Aim + move</strong><small>Move cursor</small></li>
+          <li><span>🤏</span><strong>Two grips</strong><small>Aim target</small></li>
+          <li><span>👐</span><strong>Spread / close</strong><small>Focus / return</small></li>
+          <li><span>👍</span><strong>Hold thumb</strong><small>Full view</small></li>
+        </ul>
+      </section>
+
+      <footer class="timeline glass-panel">
+        <div class="selection-block">
+          <span class="readout-label">Selected component</span>
+          <strong id="selected-part">None — aim with two grips and spread, or click a part</strong>
+          <span id="selected-dimensions" class="selected-dimensions">W — · D — · H —</span>
+          <span id="selected-engineering-status" class="engineering-status">Select a component to inspect its manufacturing status</span>
+        </div>
+        <label class="explosion-control" for="explosion-slider">
+          <span>Assembly separation</span>
+          <input id="explosion-slider" type="range" min="0" max="100" value="0" />
+          <output id="explosion-output" for="explosion-slider">0%</output>
+        </label>
+        <div class="mouse-help">
+          <span>Drag orbit</span>
+          <span>Wheel zoom</span>
+          <span>Right-drag pan</span>
+        </div>
+      </footer>
+
+      <div id="scene-reticle" class="scene-reticle" aria-hidden="true"><span></span></div>
+      <div id="product-drop-overlay" class="product-drop-overlay" aria-hidden="true"><strong>DROP PRODUCT FILES</strong><span>GLB + optional engineering JSON</span></div>
+      <div id="dimension-layer" class="dimension-layer" aria-hidden="true"></div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <div class="corner corner-tl" aria-hidden="true"></div>
+      <div class="corner corner-tr" aria-hidden="true"></div>
+      <div class="corner corner-bl" aria-hidden="true"></div>
+      <div class="corner corner-br" aria-hidden="true"></div>
+    </main>
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>

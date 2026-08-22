@@ -1,0 +1,32 @@
+{
+  "name": "spatial-hardware-inspector",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Local-first, gesture-controlled 3D engineering viewer for robots and hardware products.",
+  "type": "module",
+  "scripts": {
+    "start": "vite --host 127.0.0.1 --open --strictPort",
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test scripts/package.test.mjs",
+    "test:ci": "npm test && npm run build",
+    "test:smoke": "node scripts/smoke-test.mjs"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SouravBeraAkaSpeed/spatial_hardware_inspector.git"
+  },
+  "license": "MIT",
+  "author": "Sourav Bera",
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "vite": "^8.2.1"
+  }
+}

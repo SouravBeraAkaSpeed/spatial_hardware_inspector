@@ -1,0 +1,17 @@
+{
+  "name": "Spatial Hardware Inspector",
+  "short_name": "Spatial Inspector",
+  "description": "Gesture-controlled 3D engineering viewer for hardware products.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#03070c",
+  "theme_color": "#071018",
+  "icons": [
+    {
+      "src": "/spatial-hardware-inspector-logo.png",
+      "sizes": "1536x1536",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

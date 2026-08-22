@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.smoke-profile/
+.env
+.env.*
+*.log
+*.zip
+release/

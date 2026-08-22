@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Spatial Hardware Inspector"
+type: software
+version: 1.0.0
+date-released: 2026-08-22
+authors:
+  - family-names: Bera
+    given-names: Sourav
+    alias: SouravBeraAkaSpeed
+repository-code: "https://github.com/SouravBeraAkaSpeed/spatial_hardware_inspector"
+url: "https://github.com/SouravBeraAkaSpeed/spatial_hardware_inspector"
+license: MIT
+abstract: "A local-first, gesture-controlled 3D engineering viewer for robots and physical products."
